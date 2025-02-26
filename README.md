@@ -27,7 +27,8 @@ To run this project locally, follow these steps:
 4. **Running the Application**  
 
         go run main.go
-5 **The output should indicate the server is running:**
+   
+5. **The output should indicate the server is running:**
 
         Starting server on :8080
 
@@ -36,11 +37,11 @@ To run this project locally, follow these steps:
 - **Upload a Receipt: (Send the POST Request using curl)**
 
           curl -X POST http://localhost:8080/receipts/process -H "Content-Type: application/json" -d "RECEIPT"
-  for example
+    for example
   
           curl -X POST http://localhost:8080/receipts/process -H "Content-Type: application/json" -d "{ \"retailer\": \"M&M Corner Market\", \"purchaseDate\": \"2022-03-20\", \"purchaseTime\": \"14:33\", \"items\": [ { \"shortDescription\": \"Gatorade\", \"price\": \"2.25\" }, { \"shortDescription\": \"Gatorade\", \"price\": \"2.25\" }, { \"shortDescription\": \"Gatorade\", \"price\": \"2.25\" }, { \"shortDescription\": \"Gatorade\", \"price\": \"2.25\" } ], \"total\": \"9.00\" }"
 
-You should receive a response with an ID like:
+    You should receive a response with an ID like:
 
         {"id": "generated-id"}
 
@@ -49,9 +50,10 @@ You should receive a response with an ID like:
 - **Processed Receipt: (Use the Returned ID to Get Points)**
 
        curl -X GET http://localhost:8080/receipts/{your-generated-id}/points
-Replace {generated-id} with the actual ID returned from the POST request. This should return the points associated with the receipt:
+  
+   Replace {generated-id} with the actual ID returned from the POST request. This should return the points associated with the receipt:
 
-        {"points": <calculated-points>}
+       {"points": <calculated-points>}
 
     
 ## Running Tests
