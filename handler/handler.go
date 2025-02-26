@@ -23,7 +23,7 @@ func (h handler) ProcessReceipt(w http.ResponseWriter, r *http.Request, param ht
 	// unmarshal request to model.Receipt
 	var receipt model.Receipt
 	if err := json.NewDecoder(r.Body).Decode(&receipt); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "JSON file error", http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()

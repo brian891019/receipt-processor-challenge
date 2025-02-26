@@ -275,3 +275,12 @@ func TestEmptyRetailer(t *testing.T) {
 		t.Errorf("Expected error for empty retailer")
 	}
 }
+
+func TestGetPoint(t *testing.T) {
+	pointService := NewPointService()
+
+	_, err := pointService.GetPoint("non_existing_id")
+	if err == nil {
+		t.Errorf("Expected error for not existing id")
+	}
+}
