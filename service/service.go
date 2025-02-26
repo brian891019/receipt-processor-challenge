@@ -72,8 +72,6 @@ func (s *pointService) GetPoint(id string) (int, error) {
 
 func (s *pointService) calculatePoints(receipt model.Receipt) (int, error) {
 	points := 0
-
-	// Parse total to float
 	total, err := strconv.ParseFloat(receipt.Total, 64)
 	if err != nil {
 		return points, model.ErrInvalidTotal
@@ -86,7 +84,6 @@ func (s *pointService) calculatePoints(receipt model.Receipt) (int, error) {
 	if total == float64(int(total)) {
 		points += 50
 	}
-
 	// One point for every alphanumeric character in the retailer name.
 	for _, char := range receipt.Retailer {
 		if alphanumeric(char) {
