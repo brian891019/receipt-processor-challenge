@@ -29,8 +29,10 @@ func NewPointService() PointService {
 // processes receipt and stores the points in memory.
 func (s *pointService) ProcessReceipt(receipt model.Receipt) (string, error) {
 	id := uuid.New().String()
-	points := s.calculatePoints(receipt)
-
+	points, err := s.calculatePoints(receipt)
+	if err != nil {
+		return id, errors.New("invalid id")
+	}
 	if receipt.Retailer == "" {
 		return "", errors.New("invalid receipt data")
 	}
@@ -47,24 +49,25 @@ func (s *pointService) GetPoint(id string) (int, error) {
 	return points, nil
 }
 
-func (s *pointService) calculatePoints(receipt model.Receipt) int {
+func (s *pointService) calculatePoints(receipt model.Receipt) (int, error) {
 	points := 0
 
 	// Parse total to float
 	total, err := strconv.ParseFloat(receipt.Total, 64)
-	if err == nil {
-		// if the total is 0, shouldn't have any point
-		if int(total) == 0 {
-			return points
-		}
-		// 25 points if the total is a multiple of 0.25.
-		if int(total*100)%25 == 0 {
-			points += 25
-		}
-		// 50 points if the total is a round dollar amount with no cents.
-		if total == float64(int(total)) {
-			points += 50
-		}
+	if err != nil {
+		return points, errors.New("invalid total")
+	}
+	// if the total is 0, shouldn't have any point
+	if int(total) == 0 {
+		return points, errors.New("total shouldn't be 0")
+	}
+	// 25 points if the total is a multiple of 0.25.
+	if int(total*100)%25 == 0 {
+		points += 25
+	}
+	// 50 points if the total is a round dollar amount with no cents.
+	if total == float64(int(total)) {
+		points += 50
 
 	}
 
@@ -84,27 +87,35 @@ func (s *pointService) calculatePoints(receipt model.Receipt) int {
 		descriptionLength := len(strings.TrimSpace(item.ShortDescription))
 		if descriptionLength%3 == 0 {
 			itemPrice, err := strconv.ParseFloat(item.Price, 64)
-			if err == nil {
-				points += int(math.Ceil(itemPrice * 0.2))
+			if err != nil {
+				return points, errors.New("invalid itemPrice")
+
 			}
+			points += int(math.Ceil(itemPrice * 0.2))
 		}
 	}
 
 	// 10 points if the time of purchase is after 2:00pm and before 4:00pm.
 	purchaseTime, err := time.Parse("15:04", receipt.PurchaseTime)
+	if err != nil {
+		return points, errors.New("invalid purchaseTime")
+	}
 	two_pm, _ := time.Parse("15:04", "14:00")
 	four_pm, _ := time.Parse("15:04", "16:00")
-	if err == nil && purchaseTime.After(two_pm) && purchaseTime.Before(four_pm) {
+	if purchaseTime.After(two_pm) && purchaseTime.Before(four_pm) {
 		points += 10
 	}
 
 	// 6 points if the day in the purchase date is odd.
 	date, err := time.Parse("2006-01-02", receipt.PurchaseDate)
-	if err == nil && date.Day()%2 != 0 {
+	if err != nil {
+		return points, errors.New("invalid purchaseTime")
+	}
+	if date.Day()%2 != 0 {
 		points += 6
 	}
 
-	return points
+	return points, nil
 }
 
 // alphanumeric checks if a character is alphanumeric.

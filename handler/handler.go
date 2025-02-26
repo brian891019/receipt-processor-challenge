@@ -29,7 +29,7 @@ func (h handler) ProcessReceipt(w http.ResponseWriter, r *http.Request, param ht
 	defer r.Body.Close()
 	id, err := h.pointService.ProcessReceipt(receipt)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -45,7 +45,7 @@ func (h handler) GetPoints(w http.ResponseWriter, r *http.Request, param httprou
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
