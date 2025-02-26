@@ -107,13 +107,12 @@ func (s *pointService) calculatePoints(receipt model.Receipt) (int, error) {
 	// If the trimmed length of the item description is a multiple of 3,
 	//multiply the price by 0.2 and round up to the nearest integer. The result is the number of points earned.
 	for _, item := range receipt.Items {
-		descriptionLength := len(strings.TrimSpace(item.ShortDescription))
-		if descriptionLength%3 == 0 {
-			itemPrice, err := strconv.ParseFloat(item.Price, 64)
-			if err != nil {
-				return points, errors.New("invalid item Price")
-
-			}
+		itemPrice, err := strconv.ParseFloat(item.Price, 64)
+		if err != nil {
+			return points, errors.New("invalid item Price")
+		}
+		descriptionLen := len(strings.TrimSpace(item.ShortDescription))
+		if descriptionLen%3 == 0 {
 			points += int(math.Ceil(itemPrice * 0.2))
 		}
 	}

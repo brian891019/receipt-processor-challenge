@@ -6,19 +6,6 @@ import (
 	"example.com/takehome/model"
 )
 
-func TestInvalidReceipt(t *testing.T) {
-	pointService := NewPointService()
-
-	receipt := model.Receipt{
-		Retailer: "",
-	}
-
-	_, err := pointService.ProcessReceipt(receipt)
-	if err == nil {
-		t.Errorf("Expected error for invalid receipt")
-	}
-}
-
 func TestProcessReceipt(t *testing.T) {
 
 	pointService := NewPointService()
@@ -73,6 +60,19 @@ func checkPoints(t *testing.T, pointService PointService, receipt model.Receipt,
 	}
 }
 
+func TestInvalidReceipt(t *testing.T) {
+	pointService := NewPointService()
+
+	receipt := model.Receipt{
+		Retailer: "",
+	}
+
+	_, err := pointService.ProcessReceipt(receipt)
+	if err == nil {
+		t.Errorf("Expected error for invalid receipt")
+	}
+}
+
 func TestEmptyReceipt(t *testing.T) {
 	pointService := NewPointService()
 
@@ -100,12 +100,31 @@ func TestInvalidTotalReceipt(t *testing.T) {
 		Items: []model.Item{
 			{ShortDescription: "Knorr Creamy Chicken", Price: "0.00"},
 		},
-		Total: "abc",
+		Total: "invalid",
 	}
 
 	_, err := pointService.ProcessReceipt(receipt)
 	if err == nil {
-		t.Errorf("Expected error for zero total receipt")
+		t.Errorf("Expected error for invalid total receipt")
+	}
+}
+
+func TestEmptyTotalReceipt(t *testing.T) {
+	pointService := NewPointService()
+
+	receipt := model.Receipt{
+		Retailer:     "traderjoes",
+		PurchaseDate: "2022-02-04",
+		PurchaseTime: "06:00",
+		Items: []model.Item{
+			{ShortDescription: "Knorr Creamy Chicken", Price: "0.00"},
+		},
+		Total: "",
+	}
+
+	_, err := pointService.ProcessReceipt(receipt)
+	if err == nil {
+		t.Errorf("Expected error for empty total receipt")
 	}
 }
 
@@ -125,5 +144,116 @@ func TestInvalidDate(t *testing.T) {
 	_, err := pointService.ProcessReceipt(receipt)
 	if err == nil {
 		t.Errorf("Expected error for invalid date")
+	}
+}
+
+func TestEmptyDate(t *testing.T) {
+	pointService := NewPointService()
+
+	receipt := model.Receipt{
+		Retailer:     "traderjoes",
+		PurchaseDate: "",
+		PurchaseTime: "06:00",
+		Items: []model.Item{
+			{ShortDescription: "Knorr Creamy Chicken", Price: "1.26"},
+		},
+		Total: "10.00",
+	}
+
+	_, err := pointService.ProcessReceipt(receipt)
+	if err == nil {
+		t.Errorf("Expected error for empty date")
+	}
+}
+
+func TestInvalidTime(t *testing.T) {
+	pointService := NewPointService()
+
+	receipt := model.Receipt{
+		Retailer:     "traderjoes",
+		PurchaseDate: "2022-01-19",
+		PurchaseTime: "invalid",
+		Items: []model.Item{
+			{ShortDescription: "Knorr Creamy Chicken", Price: "1.26"},
+		},
+		Total: "10.00",
+	}
+
+	_, err := pointService.ProcessReceipt(receipt)
+	if err == nil {
+		t.Errorf("Expected error for invalid time")
+	}
+}
+func TestEmptyTime(t *testing.T) {
+	pointService := NewPointService()
+
+	receipt := model.Receipt{
+		Retailer:     "traderjoes",
+		PurchaseDate: "2022-01-19",
+		PurchaseTime: "",
+		Items: []model.Item{
+			{ShortDescription: "Knorr Creamy Chicken", Price: "1.26"},
+		},
+		Total: "10.00",
+	}
+
+	_, err := pointService.ProcessReceipt(receipt)
+	if err == nil {
+		t.Errorf("Expected error for empty time")
+	}
+}
+func TestEmptyDescription(t *testing.T) {
+	pointService := NewPointService()
+
+	receipt := model.Receipt{
+		Retailer:     "traderjoes",
+		PurchaseDate: "2022-01-19",
+		PurchaseTime: "06:00",
+		Items: []model.Item{
+			{ShortDescription: "", Price: "1.26"},
+		},
+		Total: "10.00",
+	}
+
+	_, err := pointService.ProcessReceipt(receipt)
+	if err == nil {
+		t.Errorf("Expected error for invalid short description")
+	}
+}
+
+func TestInvalidPrice(t *testing.T) {
+	pointService := NewPointService()
+
+	receipt := model.Receipt{
+		Retailer:     "traderjoes",
+		PurchaseDate: "2022-01-19",
+		PurchaseTime: "06:00",
+		Items: []model.Item{
+			{ShortDescription: "Knorr Creamy Chicken", Price: "invalid"},
+		},
+		Total: "10.00",
+	}
+
+	_, err := pointService.ProcessReceipt(receipt)
+	if err == nil {
+		t.Errorf("Expected error for invalid price")
+	}
+}
+func TestEmptyPrice(t *testing.T) {
+	pointService := NewPointService()
+
+	receipt := model.Receipt{
+		Retailer:     "traderjoes",
+		PurchaseDate: "2022-01-19",
+		PurchaseTime: "06:00",
+		Items: []model.Item{
+			{ShortDescription: "Knorr Creamy Chicken", Price: ""},
+		},
+		Total: "10.00",
+	}
+
+	_, err := pointService.ProcessReceipt(receipt)
+	if err == nil {
+		t.Errorf("Expected error for empty price")
 	}
 }
