@@ -257,3 +257,21 @@ func TestEmptyPrice(t *testing.T) {
 		t.Errorf("Expected error for empty price")
 	}
 }
+func TestEmptyRetailer(t *testing.T) {
+	pointService := NewPointService()
+
+	receipt := model.Receipt{
+		Retailer:     "",
+		PurchaseDate: "2022-01-19",
+		PurchaseTime: "06:00",
+		Items: []model.Item{
+			{ShortDescription: "Knorr Creamy Chicken", Price: "1.26"},
+		},
+		Total: "10.00",
+	}
+
+	_, err := pointService.ProcessReceipt(receipt)
+	if err == nil {
+		t.Errorf("Expected error for empty retailer")
+	}
+}

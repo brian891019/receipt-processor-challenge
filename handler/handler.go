@@ -28,11 +28,15 @@ func (h handler) ProcessReceipt(w http.ResponseWriter, r *http.Request, param ht
 	}
 	defer r.Body.Close()
 	id, err := h.pointService.ProcessReceipt(receipt)
+
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		if err == model.ErrInvalidReceipt || err == model.ErrCalculatePoint {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
-
 	json.NewEncoder(w).Encode(model.IDResponse{ID: id})
 }
 
