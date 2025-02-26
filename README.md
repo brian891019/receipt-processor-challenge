@@ -27,31 +27,33 @@ To run this project locally, follow these steps:
 4. **Running the Application**  
 
         go run main.go
+5 **The output should indicate the server is running:**
 
+        Starting server on :8080
 
 ## API Endpoints
 
-- **Upload a Receipt:**
+- **Upload a Receipt: (Send the POST Request using curl)**
 
-        POST /receipts
+          curl -X POST http://localhost:8080/receipts/process -H "Content-Type: application/json" -d "RECEIPT"
+  for example
+  
+          curl -X POST http://localhost:8080/receipts/process -H "Content-Type: application/json" -d "{ \"retailer\": \"M&M Corner Market\", \"purchaseDate\": \"2022-03-20\", \"purchaseTime\": \"14:33\", \"items\": [ { \"shortDescription\": \"Gatorade\", \"price\": \"2.25\" }, { \"shortDescription\": \"Gatorade\", \"price\": \"2.25\" }, { \"shortDescription\": \"Gatorade\", \"price\": \"2.25\" }, { \"shortDescription\": \"Gatorade\", \"price\": \"2.25\" } ], \"total\": \"9.00\" }"
+
+You should receive a response with an ID like:
+
+        {"id": "generated-id"}
+
+          
+
+- **Processed Receipt: (Use the Returned ID to Get Points)**
+
+       curl -X GET http://localhost:8080/receipts/{your-generated-id}/points
+Replace {generated-id} with the actual ID returned from the POST request. This should return the points associated with the receipt:
+
+        {"points": <calculated-points>}
+
     
-
-    Upload a receipt image for processing. The image should be included in the form data with the key `file`.
-
-- **Retrieve Processed Receipt:**
-
-        GET /receipts/<id>
-    
-
-    Retrieve details of a processed receipt using its ID.
-
-- **Delete Processed Receipt:**
-
-        DELETE /receipts/<id>
-    
-
-    Delete a processed receipt from the system using its ID.
-
 ## Running Tests
 
 To run tests, use the following command:
