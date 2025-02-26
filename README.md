@@ -24,18 +24,20 @@ To run this project locally, follow these steps:
 
         go mod tidy
     
-4. **Running the Application**  
-
+4. **Running the Application**
+   
+        cd cmd
         go run main.go
    
-5. **The output should indicate the server is running:**
+6. **The output should indicate the server is running:**
 
         Starting server on :8080
 
 ## API Endpoints
 
 - **Upload a Receipt: (Send the POST Request using curl)**
-
+  
+        cd ..
         curl -X POST http://localhost:8080/receipts/process -H "Content-Type: application/json" -d @receipt.json
 
     (Note: change the receipt.json file if you want to process other receipt)
