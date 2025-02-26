@@ -26,7 +26,6 @@ To run this project locally, follow these steps:
     
 4. **Running the Application**
    
-        cd cmd
         go run main.go
    
 6. **The output should indicate the server is running:**
@@ -37,7 +36,6 @@ To run this project locally, follow these steps:
 
 - **Upload a Receipt: (Send the POST Request using curl)**
   
-        cd ..
         curl -X POST http://localhost:8080/receipts/process -H "Content-Type: application/json" -d @receipt.json
 
     (Note: change the receipt.json file if you want to process other receipt)

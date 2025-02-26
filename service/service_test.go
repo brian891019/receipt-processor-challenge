@@ -90,7 +90,7 @@ func TestEmptyReceipt(t *testing.T) {
 	}
 }
 
-func TestZeroTotalReceipt(t *testing.T) {
+func TestInvalidTotalReceipt(t *testing.T) {
 	pointService := NewPointService()
 
 	receipt := model.Receipt{
@@ -100,22 +100,12 @@ func TestZeroTotalReceipt(t *testing.T) {
 		Items: []model.Item{
 			{ShortDescription: "Knorr Creamy Chicken", Price: "0.00"},
 		},
-		Total: "0.00",
+		Total: "abc",
 	}
 
-	id, err := pointService.ProcessReceipt(receipt)
-	if err != nil {
-		t.Fatalf("Failed to process receipt: %v", err)
-	}
-
-	points, err := pointService.GetPoint(id)
-	if err != nil {
-		t.Fatalf("Failed to get points: %v", err)
-	}
-
-	expectedPoints := 0
-	if points != expectedPoints {
-		t.Errorf("Expected %d points, got %d", expectedPoints, points)
+	_, err := pointService.ProcessReceipt(receipt)
+	if err == nil {
+		t.Errorf("Expected error for zero total receipt")
 	}
 }
 
@@ -132,13 +122,8 @@ func TestInvalidDate(t *testing.T) {
 		Total: "10.00",
 	}
 
-	id, err := pointService.ProcessReceipt(receipt)
-	if err != nil {
-		t.Fatalf("Failed to process receipt: %v", err)
-	}
-
-	_, err = pointService.GetPoint(id)
-	if err != nil {
-		t.Errorf("Failed to get points: %v", err)
+	_, err := pointService.ProcessReceipt(receipt)
+	if err == nil {
+		t.Errorf("Expected error for invalid date")
 	}
 }

@@ -17,32 +17,60 @@ type PointService interface {
 }
 
 type pointService struct {
-	localMem map[string]int
+	IdToPointMap map[string]int
 }
 
 func NewPointService() PointService {
 	return &pointService{
-		localMem: make(map[string]int),
+		IdToPointMap: make(map[string]int),
 	}
 }
 
 // processes receipt and stores the points in memory.
 func (s *pointService) ProcessReceipt(receipt model.Receipt) (string, error) {
 	id := uuid.New().String()
+	receipt_valid, err := s.ValidateReceipt(receipt)
+	if err != nil {
+		return id, errors.New("error validating receipt")
+	}
+	if !receipt_valid {
+		return id, errors.New("receipt contains error field")
+	}
+
 	points, err := s.calculatePoints(receipt)
 	if err != nil {
-		return id, errors.New("invalid id")
+		return id, errors.New("error calculating points")
 	}
 	if receipt.Retailer == "" {
 		return "", errors.New("invalid receipt data")
 	}
-	s.localMem[id] = points
+	s.IdToPointMap[id] = points
 	return id, nil
+}
+
+// check if any field on the receipt is empty, if it is throw an error
+func (s *pointService) ValidateReceipt(receipt model.Receipt) (bool, error) {
+	total := receipt.Total
+	purchase_date := receipt.PurchaseDate
+	purchase_time := receipt.PurchaseTime
+	retailer := receipt.Retailer
+
+	if total == "" || purchase_time == "" || purchase_date == "" || retailer == "" {
+		return false, errors.New("any receipt field shouldn't be empty")
+	}
+
+	for _, item := range receipt.Items {
+		if item.Price == "" || item.ShortDescription == "" {
+			return false, errors.New("any item field shouldn't be empty")
+		}
+	}
+
+	return true, nil
 }
 
 // retrieves the points for a given receipt ID.
 func (s *pointService) GetPoint(id string) (int, error) {
-	points, ok := s.localMem[id]
+	points, ok := s.IdToPointMap[id]
 	if !ok {
 		return 0, model.ErrNotFound
 	}
@@ -57,10 +85,6 @@ func (s *pointService) calculatePoints(receipt model.Receipt) (int, error) {
 	if err != nil {
 		return points, errors.New("invalid total")
 	}
-	// if the total is 0, shouldn't have any point
-	if int(total) == 0 {
-		return points, errors.New("total shouldn't be 0")
-	}
 	// 25 points if the total is a multiple of 0.25.
 	if int(total*100)%25 == 0 {
 		points += 25
@@ -68,7 +92,6 @@ func (s *pointService) calculatePoints(receipt model.Receipt) (int, error) {
 	// 50 points if the total is a round dollar amount with no cents.
 	if total == float64(int(total)) {
 		points += 50
-
 	}
 
 	// One point for every alphanumeric character in the retailer name.
@@ -88,7 +111,7 @@ func (s *pointService) calculatePoints(receipt model.Receipt) (int, error) {
 		if descriptionLength%3 == 0 {
 			itemPrice, err := strconv.ParseFloat(item.Price, 64)
 			if err != nil {
-				return points, errors.New("invalid itemPrice")
+				return points, errors.New("invalid item Price")
 
 			}
 			points += int(math.Ceil(itemPrice * 0.2))
@@ -109,7 +132,7 @@ func (s *pointService) calculatePoints(receipt model.Receipt) (int, error) {
 	// 6 points if the day in the purchase date is odd.
 	date, err := time.Parse("2006-01-02", receipt.PurchaseDate)
 	if err != nil {
-		return points, errors.New("invalid purchaseTime")
+		return points, errors.New("invalid PurchaseDate")
 	}
 	if date.Day()%2 != 0 {
 		points += 6
