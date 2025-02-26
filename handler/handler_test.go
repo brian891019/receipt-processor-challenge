@@ -3,21 +3,21 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"example.com/takehome/model"
-	"example.com/takehome/service"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestProcessReceiptHandler(t *testing.T) {
+	mockPointService := new(MockPointService)
 	router := httprouter.New()
-	pointService := service.NewPointService()
-	h := NewHandler(pointService)
-
+	h := NewHandler(mockPointService)
 	router.POST("/receipts/process", h.ProcessReceipt)
 
 	receipt := model.Receipt{
@@ -34,10 +34,11 @@ func TestProcessReceiptHandler(t *testing.T) {
 		Total: "35.35",
 	}
 
+	mockPointService.On("ProcessReceipt", mock.Anything).Return("mockReceiptID", nil)
+
 	receipt_marshaled, _ := json.Marshal(receipt)
 	request := httptest.NewRequest("POST", "/receipts/process", bytes.NewBuffer(receipt_marshaled))
 	w := httptest.NewRecorder()
-
 	router.ServeHTTP(w, request)
 
 	response := w.Result()
@@ -52,40 +53,24 @@ func TestProcessReceiptHandler(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to decode response: %v", err)
 	}
-
-	if result_id.ID == "" {
-		t.Errorf("Expected non-empty id")
+	if result_id.ID != "mockReceiptID" {
+		t.Fatalf("Receipt ID not match")
 	}
+
+	mockPointService.AssertExpectations(t)
+
 }
 
 func TestGetPointsHandler(t *testing.T) {
-	pointService := service.NewPointService()
-	h := NewHandler(pointService)
-
+	mockPointService := new(MockPointService)
 	router := httprouter.New()
+	h := NewHandler(mockPointService)
 	router.GET("/receipts/:id/points", h.GetPoints)
 
-	receipt := model.Receipt{
-		Retailer:     "Target",
-		PurchaseDate: "2022-01-01",
-		PurchaseTime: "13:01",
-		Items: []model.Item{
-			{ShortDescription: "Mountain Dew 12PK", Price: "6.49"},
-			{ShortDescription: "Emils Cheese Pizza", Price: "12.25"},
-			{ShortDescription: "Knorr Creamy Chicken", Price: "1.26"},
-			{ShortDescription: "Doritos Nacho Cheese", Price: "3.35"},
-			{ShortDescription: "Klarbrunn 12-PK 12 FL OZ", Price: "12.00"},
-		},
-		Total: "35.35",
-	}
+	receiptID := "mockReceiptID"
+	mockPointService.On("GetPoint", receiptID).Return(28, nil)
 
-	id, err := pointService.ProcessReceipt(receipt)
-	if err != nil {
-		t.Fatalf("Failed to process receipt: %v", err)
-	}
-
-	// Use the ID to get points
-	req := httptest.NewRequest("GET", "/receipts/"+id+"/points", nil)
+	req := httptest.NewRequest("GET", "/receipts/"+receiptID+"/points", nil)
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
@@ -106,13 +91,14 @@ func TestGetPointsHandler(t *testing.T) {
 	if pointsResponse.Points != expectedPoints {
 		t.Errorf("Expected %d points, got %d", expectedPoints, pointsResponse.Points)
 	}
+	mockPointService.AssertExpectations(t)
+
 }
 
 func TestProcessErrorReceiptHandler(t *testing.T) {
+	mockPointService := new(MockPointService)
 	router := httprouter.New()
-	pointService := service.NewPointService()
-	h := NewHandler(pointService)
-
+	h := NewHandler(mockPointService)
 	router.POST("/receipts/process", h.ProcessReceipt)
 
 	receipt := model.Receipt{
@@ -129,10 +115,11 @@ func TestProcessErrorReceiptHandler(t *testing.T) {
 		Total: "35.35",
 	}
 
+	mockPointService.On("ProcessReceipt", mock.Anything).Return("", errors.New("invalid receipt"))
+
 	receipt_marshaled, _ := json.Marshal(receipt)
 	request := httptest.NewRequest("POST", "/receipts/process", bytes.NewBuffer(receipt_marshaled))
 	w := httptest.NewRecorder()
-
 	router.ServeHTTP(w, request)
 
 	response := w.Result()
@@ -141,54 +128,30 @@ func TestProcessErrorReceiptHandler(t *testing.T) {
 	if response.StatusCode == http.StatusOK {
 		t.Errorf("Expected status error, got %d", response.StatusCode)
 	}
+	mockPointService.AssertExpectations(t)
+
 }
 
 func TestErrorGetPointsHandler(t *testing.T) {
-	pointService := service.NewPointService()
-	h := NewHandler(pointService)
-
+	mockPointService := new(MockPointService)
 	router := httprouter.New()
+	h := NewHandler(mockPointService)
 	router.GET("/receipts/:id/points", h.GetPoints)
 
-	receipt := model.Receipt{
-		Retailer:     "Target",
-		PurchaseDate: "2022-01-01",
-		PurchaseTime: "13:01",
-		Items: []model.Item{
-			{ShortDescription: "Mountain Dew 12PK", Price: "6.49"},
-			{ShortDescription: "Emils Cheese Pizza", Price: "12.25"},
-			{ShortDescription: "Knorr Creamy Chicken", Price: "1.26"},
-			{ShortDescription: "Doritos Nacho Cheese", Price: "3.35"},
-			{ShortDescription: "Klarbrunn 12-PK 12 FL OZ", Price: "12.00"},
-		},
-		Total: "35.35",
-	}
+	receiptID := "invalidID"
+	mockPointService.On("GetPoint", receiptID).Return(0, errors.New("receipt not found"))
 
-	id, err := pointService.ProcessReceipt(receipt)
-	if err != nil {
-		t.Fatalf("Failed to process receipt: %v", err)
-	}
-
-	// Use the ID to get points
-	req := httptest.NewRequest("GET", "/receipts/"+id+"/points", nil)
+	req := httptest.NewRequest("GET", "/receipts/"+receiptID+"/points", nil)
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
 
-	resp := w.Result()
-	defer resp.Body.Close()
+	response := w.Result()
+	defer response.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf("Expected status 200, got %d", resp.StatusCode)
+	if response.StatusCode == http.StatusOK {
+		t.Errorf("Expected status error, got %d", response.StatusCode)
 	}
+	mockPointService.AssertExpectations(t)
 
-	var pointsResponse model.PointsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&pointsResponse); err != nil {
-		t.Fatalf("Failed to decode response: %v", err)
-	}
-
-	expectedPoints := 28
-	if pointsResponse.Points != expectedPoints {
-		t.Errorf("Expected %d points, got %d", expectedPoints, pointsResponse.Points)
-	}
 }

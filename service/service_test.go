@@ -98,7 +98,7 @@ func TestInvalidTotalReceipt(t *testing.T) {
 		PurchaseDate: "2022-02-04",
 		PurchaseTime: "06:00",
 		Items: []model.Item{
-			{ShortDescription: "Knorr Creamy Chicken", Price: "0.00"},
+			{ShortDescription: "Knorr Creamy Chicken", Price: "10.00"},
 		},
 		Total: "invalid",
 	}
@@ -117,7 +117,7 @@ func TestEmptyTotalReceipt(t *testing.T) {
 		PurchaseDate: "2022-02-04",
 		PurchaseTime: "06:00",
 		Items: []model.Item{
-			{ShortDescription: "Knorr Creamy Chicken", Price: "0.00"},
+			{ShortDescription: "Knorr Creamy Chicken", Price: "10.00"},
 		},
 		Total: "",
 	}
