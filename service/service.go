@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"math"
 	"strconv"
 	"strings"
@@ -28,44 +27,38 @@ func NewPointService() PointService {
 
 // processes receipt and stores the points in memory.
 func (s *pointService) ProcessReceipt(receipt model.Receipt) (string, error) {
-	id := uuid.New().String()
-	receipt_valid, err := s.ValidateReceipt(receipt)
+	err := s.validateReceipt(receipt)
 	if err != nil {
-		return id, errors.New("error validating receipt")
-	}
-	if !receipt_valid {
-		return id, errors.New("receipt contains error field")
+		return "", model.ErrInvalidItemPrice
 	}
 
 	points, err := s.calculatePoints(receipt)
 	if err != nil {
-		return id, errors.New("error calculating points")
+		return "", model.ErrCalculatePoint
 	}
-	if receipt.Retailer == "" {
-		return "", errors.New("invalid receipt data")
-	}
+	id := uuid.New().String()
 	s.IdToPointMap[id] = points
 	return id, nil
 }
 
 // check if any field on the receipt is empty, if it is throw an error
-func (s *pointService) ValidateReceipt(receipt model.Receipt) (bool, error) {
+func (s *pointService) validateReceipt(receipt model.Receipt) error {
 	total := receipt.Total
 	purchase_date := receipt.PurchaseDate
 	purchase_time := receipt.PurchaseTime
 	retailer := receipt.Retailer
 
 	if total == "" || purchase_time == "" || purchase_date == "" || retailer == "" {
-		return false, errors.New("any receipt field shouldn't be empty")
+		return model.ErrEmptyField
 	}
 
 	for _, item := range receipt.Items {
 		if item.Price == "" || item.ShortDescription == "" {
-			return false, errors.New("any item field shouldn't be empty")
+			return model.ErrEmptyField
 		}
 	}
 
-	return true, nil
+	return nil
 }
 
 // retrieves the points for a given receipt ID.
@@ -83,7 +76,7 @@ func (s *pointService) calculatePoints(receipt model.Receipt) (int, error) {
 	// Parse total to float
 	total, err := strconv.ParseFloat(receipt.Total, 64)
 	if err != nil {
-		return points, errors.New("invalid total")
+		return points, model.ErrInvalidTotal
 	}
 	// 25 points if the total is a multiple of 0.25.
 	if int(total*100)%25 == 0 {
@@ -109,7 +102,7 @@ func (s *pointService) calculatePoints(receipt model.Receipt) (int, error) {
 	for _, item := range receipt.Items {
 		itemPrice, err := strconv.ParseFloat(item.Price, 64)
 		if err != nil {
-			return points, errors.New("invalid item Price")
+			return points, model.ErrInvalidItemPrice
 		}
 		descriptionLen := len(strings.TrimSpace(item.ShortDescription))
 		if descriptionLen%3 == 0 {
@@ -120,7 +113,7 @@ func (s *pointService) calculatePoints(receipt model.Receipt) (int, error) {
 	// 10 points if the time of purchase is after 2:00pm and before 4:00pm.
 	purchaseTime, err := time.Parse("15:04", receipt.PurchaseTime)
 	if err != nil {
-		return points, errors.New("invalid purchaseTime")
+		return points, model.ErrInvalidPurchaseTime
 	}
 	two_pm, _ := time.Parse("15:04", "14:00")
 	four_pm, _ := time.Parse("15:04", "16:00")
@@ -131,7 +124,7 @@ func (s *pointService) calculatePoints(receipt model.Receipt) (int, error) {
 	// 6 points if the day in the purchase date is odd.
 	date, err := time.Parse("2006-01-02", receipt.PurchaseDate)
 	if err != nil {
-		return points, errors.New("invalid PurchaseDate")
+		return points, model.ErrInvalidPurchaseDate
 	}
 	if date.Day()%2 != 0 {
 		points += 6
