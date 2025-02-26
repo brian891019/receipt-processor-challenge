@@ -36,10 +36,10 @@ To run this project locally, follow these steps:
 
 - **Upload a Receipt: (Send the POST Request using curl)**
 
-          curl -X POST http://localhost:8080/receipts/process -H "Content-Type: application/json" -d "RECEIPT"
-    for example
-  
-          curl -X POST http://localhost:8080/receipts/process -H "Content-Type: application/json" -d "{ \"retailer\": \"M&M Corner Market\", \"purchaseDate\": \"2022-03-20\", \"purchaseTime\": \"14:33\", \"items\": [ { \"shortDescription\": \"Gatorade\", \"price\": \"2.25\" }, { \"shortDescription\": \"Gatorade\", \"price\": \"2.25\" }, { \"shortDescription\": \"Gatorade\", \"price\": \"2.25\" }, { \"shortDescription\": \"Gatorade\", \"price\": \"2.25\" } ], \"total\": \"9.00\" }"
+        curl -X POST http://localhost:8080/receipts/process -H "Content-Type: application/json" -d @receipt.json
+
+    (Note: change the receipt.json file if you want to process other receipt)
+    
 
     You should receive a response with an ID like:
 
