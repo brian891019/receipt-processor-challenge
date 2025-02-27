@@ -74,7 +74,7 @@ func calculatePoints(receipt model.Receipt) (int, error) {
 	points := 0
 	total, err := strconv.ParseFloat(receipt.Total, 64)
 	if err != nil {
-		return points, model.ErrCalculatePoint
+		return 0, model.ErrCalculatePoint
 	}
 	// 25 points if the total is a multiple of 0.25.
 	if int(total*100)%25 == 0 {
@@ -99,7 +99,7 @@ func calculatePoints(receipt model.Receipt) (int, error) {
 	for _, item := range receipt.Items {
 		itemPrice, err := strconv.ParseFloat(item.Price, 64)
 		if err != nil {
-			return points, model.ErrCalculatePoint
+			return 0, model.ErrCalculatePoint
 		}
 		descriptionLen := len(strings.TrimSpace(item.ShortDescription))
 		if descriptionLen%3 == 0 {
@@ -110,7 +110,7 @@ func calculatePoints(receipt model.Receipt) (int, error) {
 	// 10 points if the time of purchase is after 2:00pm and before 4:00pm.
 	purchaseTime, err := time.Parse("15:04", receipt.PurchaseTime)
 	if err != nil {
-		return points, model.ErrCalculatePoint
+		return 0, model.ErrCalculatePoint
 	}
 	two_pm, _ := time.Parse("15:04", "14:00")
 	four_pm, _ := time.Parse("15:04", "16:00")
@@ -121,7 +121,7 @@ func calculatePoints(receipt model.Receipt) (int, error) {
 	// 6 points if the day in the purchase date is odd.
 	date, err := time.Parse("2006-01-02", receipt.PurchaseDate)
 	if err != nil {
-		return points, model.ErrCalculatePoint
+		return 0, model.ErrCalculatePoint
 	}
 	if date.Day()%2 != 0 {
 		points += 6
