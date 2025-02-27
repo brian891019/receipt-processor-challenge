@@ -99,8 +99,8 @@ func TestProcessErrorReceiptHandler(t *testing.T) {
 	response := w.Result()
 	defer response.Body.Close()
 
-	if response.StatusCode == http.StatusOK {
-		t.Errorf("Expected status error, got %d", response.StatusCode)
+	if response.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status bad request error, got %d", response.StatusCode)
 	}
 	mockPointService.AssertExpectations(t)
 
@@ -123,8 +123,8 @@ func TestErrorGetPointsHandler(t *testing.T) {
 	response := w.Result()
 	defer response.Body.Close()
 
-	if response.StatusCode == http.StatusOK {
-		t.Errorf("Expected status error, got %d", response.StatusCode)
+	if response.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected status not found error, got %d", response.StatusCode)
 	}
 	mockPointService.AssertExpectations(t)
 
@@ -147,8 +147,8 @@ func TestInternalServerError(t *testing.T) {
 	response := w.Result()
 	defer response.Body.Close()
 
-	if response.StatusCode == http.StatusOK {
-		t.Errorf("Expected status error, got %d", response.StatusCode)
+	if response.StatusCode != http.StatusInternalServerError {
+		t.Errorf("Expected status internal server error, got %d", response.StatusCode)
 	}
 	mockPointService.AssertExpectations(t)
 
@@ -171,8 +171,8 @@ func TestGetPointsError(t *testing.T) {
 	response := w.Result()
 	defer response.Body.Close()
 
-	if response.StatusCode == http.StatusOK {
-		t.Errorf("Expected status error, got %d", response.StatusCode)
+	if response.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status bad request error, got %d", response.StatusCode)
 	}
 	mockPointService.AssertExpectations(t)
 
