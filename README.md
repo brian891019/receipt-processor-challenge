@@ -1,4 +1,4 @@
-# Receipt Processor Challenge
+# Receipt Processor
 
 ## Introduction
 
